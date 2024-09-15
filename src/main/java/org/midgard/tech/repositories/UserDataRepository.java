@@ -19,4 +19,11 @@ public class UserDataRepository implements PanacheMongoRepository<UserData> {
 
         return find("data.numeroDocumento = ?1", documentNumber).firstResultOptional();
     }
+
+    public long deleteUserDataMongo(String documentNumber) {
+
+        LOG.infof("@deleteUserDataMongo REPO > Inicia eliminacion de usuario de id: %s en mongo", documentNumber);
+
+        return delete("data.numeroDocumento = ?1", documentNumber);
+    }
 }
