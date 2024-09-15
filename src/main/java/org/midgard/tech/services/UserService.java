@@ -98,6 +98,26 @@ public class UserService {
                 "con id: %s con la data: %s", userData.getData().getDocumentNumber(), userData.getData());
     }
 
+    public void deleteUserDataInMongo(String documentNumber) throws MTException {
+
+        LOG.infof("@deleteUserDataInMongo SERV > Inicia ejecucion del servicio para eliminar registro del " +
+                "usuario con id: %s de mongo", documentNumber);
+
+        long update = userDataRepository.deleteUserDataMongo(documentNumber);
+
+        if (update == 0) {
+
+            LOG.errorf("@deleteUserDataInMongo SERV > El registro de usuario con numero de documento: %s No " +
+                    "existe en mongo. No se realiza eliminacion. %s registros eliminados", documentNumber, update);
+
+            throw new MTException(Response.Status.NOT_FOUND, "No se encontró registro del usuario con el " +
+                    "identificador: " + documentNumber + " en mongo");
+        }
+        LOG.infof("@deleteUserDataInMongo SERV > El registro del usuario con numero de documento: %s se " +
+                "elimino correctamente de mongo. Finaliza ejecucion del servicio para eliminar usuario y se elimino " +
+                "%s registro de la base de datos", documentNumber, update);
+    }
+
     private void updateUserDataInformation(UserData userDataMongo, User editedUser, String idUser) {
 
         LOG.infof("@updateUserDataInformation SERV > Inicia actualizacion de datos de usuario con id: %s", idUser);

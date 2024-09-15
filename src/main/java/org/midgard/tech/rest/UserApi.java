@@ -2,7 +2,9 @@ package org.midgard.tech.rest;
 
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import jakarta.validation.groups.ConvertGroup;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -68,6 +70,33 @@ public class UserApi {
 
         LOG.infof("@editUserInfo API > Finaliza ejecucion de servicio de edicion de usuario con identificador" +
                 ": %s. El registro se actualizo con la data: %s", userData.getData().getDocumentNumber(), userData);
+
+        return Response.ok()
+                .status(Response.Status.NO_CONTENT)
+                .build();
+    }
+
+    @DELETE
+    @Path("/delete/{documentNumber}")
+    public Response deleteUserData(
+            @Parameter(
+                    name = "documentNumber",
+                    description = "Numero de identificación del usuario a eliminar en mongo",
+                    example = "12345670",
+                    required = true
+            )
+            @NotBlank(message = "El valor para número de documento no puede ser nulo o vacío")
+            @Size(min = 7, max = 20, message = "El campo número de documento debe contener entre 7 y 20 caracteres")
+            @PathParam("documentNumber") String documentNumber
+    ) throws MTException {
+
+        LOG.infof("@deleteUserData API > Inicia ejecucion del servicio para eliminar el registro del usuario " +
+                "con identificador: %s en mongo", documentNumber);
+
+        userService.deleteUserDataInMongo(documentNumber);
+
+        LOG.infof("@deleteUserData API > Finaliza ejecucion del servicio para eliminar el registro del " +
+                "usuario con identificador: %s en mongo", documentNumber);
 
         return Response.ok()
                 .status(Response.Status.NO_CONTENT)

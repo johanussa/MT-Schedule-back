@@ -27,7 +27,8 @@ public class HandlerException implements ExceptionMapper<Exception> {
 
     private Response mapExceptionToResponseMT(Exception exception) {
 
-        LOG.info("@mapExceptionToResponseMT EXCEPTION > Inicia manejo de exception presentada en micro-servicio");
+        LOG.info("@mapExceptionToResponseMT EXCEPTION > Inicia manejo de exception presentada en el micro servicio " +
+                "de Midgard-Tech");
 
         if (exception instanceof MTException mtException) {
 
