@@ -1,4 +1,4 @@
-# midgard-tech
+# Midgard-Tech
 
 This project uses Quarkus, the Supersonic Subatomic Java Framework.
 
