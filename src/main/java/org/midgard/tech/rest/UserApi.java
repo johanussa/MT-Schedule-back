@@ -18,6 +18,7 @@ import org.midgard.tech.helper.validators.ValidationGroups;
 import org.midgard.tech.services.UserService;
 
 import java.net.UnknownHostException;
+import java.util.List;
 
 @Path("/internal/user")
 @Produces(MediaType.APPLICATION_JSON)
@@ -28,6 +29,43 @@ public class UserApi {
 
     @Inject
     UserService userService;
+
+    @POST
+    public Response getUserData(
+            @RequestBody(
+                    name = "userData",
+                    description = "Información del usuario que se va a consultar",
+                    required = true
+            )
+            @NotNull(message = "Debe ingresar el objeto con la información del usuario a registrar")
+            @Valid @ConvertGroup(to = ValidationGroups.Post_Get.class) UserData userData
+    ) throws MTException {
+
+        LOG.infof("@getUserData API > Inicia ejecucion del servicio para obtener el registro del usuario con " +
+                "numero de documento: %s en base de datos", userData.getData().getDocumentNumber());
+
+        UserData userMongo = userService.getRegisteredUserMongo(userData);
+
+        LOG.infof("@getUserData API > Finaliza ejecucion del servicio para obtener el registro del usuario con " +
+                "numero de documento: %s. El usuario se obtuvo correctamente", userData.getData().getDocumentNumber());
+
+        return Response.ok().entity(userMongo).build();
+    }
+
+    @GET
+    @Path("/users")
+    public Response getListUsers() {
+
+        LOG.infof("@getListUsers API > Inicia ejecucion del servicio para obtener el listado de todos los " +
+                "usuarios registrados en mongo");
+
+        List<UserData> users = userService.getListRegisteredUser();
+
+        LOG.infof("@getListUsers API > Finaliza ejecucion del servicio para obtener el listado de todos los " +
+                "usuarios registrados en mongo. Se encontraron: %s registros", users.size());
+
+        return Response.ok().entity(users).build();
+    }
 
     @POST
     @Path("/create")
