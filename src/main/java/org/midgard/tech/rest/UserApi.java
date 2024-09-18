@@ -9,11 +9,20 @@ import jakarta.validation.groups.ConvertGroup;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import org.eclipse.microprofile.openapi.annotations.Operation;
+import org.eclipse.microprofile.openapi.annotations.enums.SchemaType;
+import org.eclipse.microprofile.openapi.annotations.media.Content;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
 import org.eclipse.microprofile.openapi.annotations.parameters.RequestBody;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
+import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 import org.jboss.logging.Logger;
 import org.midgard.tech.domains.user.UserData;
+import org.midgard.tech.helper.exceptions.HandlerException;
 import org.midgard.tech.helper.exceptions.MTException;
+import org.midgard.tech.helper.exceptions.ProblemException;
 import org.midgard.tech.helper.validators.ValidationGroups;
 import org.midgard.tech.services.UserService;
 
@@ -31,11 +40,50 @@ public class UserApi {
     UserService userService;
 
     @POST
+    @Tag(name = "Gestión de usuarios")
+    @APIResponses(
+            value = {
+                    @APIResponse(
+                            responseCode = "200",
+                            description = "Se retorna la información del usuario correctamente",
+                            content = @Content(schema = @Schema(implementation = UserData.class))
+                    ),
+                    @APIResponse(
+                            responseCode = "400",
+                            description = "Error en recursos suministrados",
+                            content = @Content(schema = @Schema(implementation = ProblemException.class))
+                    ),
+                    @APIResponse(
+                            responseCode = "404",
+                            description = "Recurso no encontrado",
+                            content = @Content(schema = @Schema(implementation = ProblemException.class))
+                    ),
+                    @APIResponse(
+                            responseCode = "500",
+                            description = "Error interno de servidor",
+                            content = @Content(schema = @Schema(implementation = HandlerException.ResponseError.class))
+                    )
+            }
+    )
+    @Operation(
+            summary = "Obtención de un usuario registrado",
+            description = "Permite obtener la información de un usuario por los datos proporcionados"
+    )
     public Response getUserData(
             @RequestBody(
                     name = "userData",
                     description = "Información del usuario que se va a consultar",
-                    required = true
+                    required = true,
+                    content = @Content(
+                            schema = @Schema(example = """
+                                    {
+                                        "data": {
+                                            "documentNumber": "10345678190",
+                                            "documentType": "CEDULA_DE_CIUDADANIA",
+                                            "password": "password"
+                                        }
+                                    }""")
+                    )
             )
             @NotNull(message = "Debe ingresar el objeto con la información del usuario a registrar")
             @Valid @ConvertGroup(to = ValidationGroups.Post_Get.class) UserData userData
@@ -54,10 +102,29 @@ public class UserApi {
 
     @GET
     @Path("/users")
+    @Tag(name = "Gestión de usuarios")
+    @APIResponses(
+            value = {
+                    @APIResponse(
+                            responseCode = "200",
+                            description = "Se obtuvo la información de todos los usuarios registrados",
+                            content = @Content(schema = @Schema(type = SchemaType.ARRAY, implementation = UserData.class))
+                    ),
+                    @APIResponse(
+                            responseCode = "500",
+                            description = "Error interno de servidor",
+                            content = @Content(schema = @Schema(implementation = HandlerException.ResponseError.class))
+                    )
+            }
+    )
+    @Operation(
+            summary = "Obtención de todos los usuarios registrados",
+            description = "Permite obtener un listado con la información de los usuario registrados"
+    )
     public Response getListUsers() {
 
-        LOG.infof("@getListUsers API > Inicia ejecucion del servicio para obtener el listado de todos los " +
-                "usuarios registrados en mongo");
+        LOG.info("@getListUsers API > Inicia ejecucion del servicio para obtener el listado de todos los usuarios " +
+                "registrados en mongo");
 
         List<UserData> users = userService.getListRegisteredUser();
 
@@ -69,11 +136,47 @@ public class UserApi {
 
     @POST
     @Path("/create")
+    @Tag(name = "Gestión de usuarios")
+    @APIResponses(
+            value = {
+                    @APIResponse(
+                            responseCode = "201",
+                            description = "El usuario fue registrado exitosamente en la base de datos"
+                    ),
+                    @APIResponse(
+                            responseCode = "400",
+                            description = "Error en recursos suministrados",
+                            content = @Content(schema = @Schema(implementation = ProblemException.class))
+                    ),
+                    @APIResponse(
+                            responseCode = "500",
+                            description = "Error interno de servidor",
+                            content = @Content(schema = @Schema(implementation = HandlerException.ResponseError.class))
+                    )
+            }
+    )
+    @Operation(
+            summary = "Creación de un usuario nuevo",
+            description = "Permite crear el registro de un usuario nuevo en la base de datos"
+    )
     public Response createUserData(
             @RequestBody(
                     name = "userData",
                     description = "Objeto con la información del usuario que se va a crear",
-                    required = true
+                    required = true,
+                    content = @Content(schema = @Schema(example = """
+                            {
+                                "data": {
+                                    "name": "John Alexander",
+                                    "lastName": "Gonzalez Rojas",
+                                    "documentType": "CEDULA_DE_CIUDADANIA",
+                                    "documentNumber": "1023456789",
+                                    "email": "jhongonzalex@soy.sena.edu.co",
+                                    "password": "password",
+                                    "role": "INSTRUCTOR"
+                                }
+                            }""")
+                    )
             )
             @NotNull(message = "Debe ingresar el objeto data con la información del usuario a registrar")
             @Valid @ConvertGroup(to = ValidationGroups.Post.class) UserData userData
@@ -92,11 +195,50 @@ public class UserApi {
 
     @PUT
     @Path("/edit")
+    @Tag(name = "Gestión de usuarios")
+    @APIResponses(
+            value = {
+                    @APIResponse(
+                            responseCode = "204",
+                            description = "El usuario se actualizó correctamente"
+                    ),
+                    @APIResponse(
+                            responseCode = "400",
+                            description = "Error en recursos suministrados",
+                            content = @Content(schema = @Schema(implementation = ProblemException.class))
+                    ),
+                    @APIResponse(
+                            responseCode = "404",
+                            description = "Recurso no encontrado",
+                            content = @Content(schema = @Schema(implementation = ProblemException.class))
+                    ),
+                    @APIResponse(
+                            responseCode = "500",
+                            description = "Error interno de servidor",
+                            content = @Content(schema = @Schema(implementation = HandlerException.ResponseError.class))
+                    )
+            }
+    )
+    @Operation(
+            summary = "Edición de un usuario registrado",
+            description = "Permite modificar la información de un usuario registrado con los datos proporcionados"
+    )
     public Response editUserInfo(
             @RequestBody(
                     name = "userData",
                     description = "Información con la que se actualizara el usuario",
-                    required = true
+                    required = true,
+                    content = @Content(schema = @Schema(example = """
+                            {
+                                "data": {
+                                    "name": "Otro nombre",
+                                    "lastName": "Otro apellido",
+                                    "documentType": "CEDULA_DE_CIUDADANIA",
+                                    "documentNumber": "1034567819",
+                                    "password": "password",
+                                    "active": "false"
+                                }
+                            }"""))
             )
             @Valid @ConvertGroup(to = ValidationGroups.Put.class) UserData userData
     ) throws MTException {
@@ -116,6 +258,29 @@ public class UserApi {
 
     @DELETE
     @Path("/delete/{documentNumber}")
+    @Tag(name = "Gestión de usuarios")
+    @APIResponses(
+            value = {
+                    @APIResponse(
+                            responseCode = "204",
+                            description = "El registro del usuario con el número proporcionado se eliminó correctamente"
+                    ),
+                    @APIResponse(
+                            responseCode = "404",
+                            description = "Recurso no encontrado",
+                            content = @Content(schema = @Schema(implementation = ProblemException.class))
+                    ),
+                    @APIResponse(
+                            responseCode = "500",
+                            description = "Error interno de servidor",
+                            content = @Content(schema = @Schema(implementation = HandlerException.ResponseError.class))
+                    )
+            }
+    )
+    @Operation(
+            summary = "Eliminación de un usuario registrado",
+            description = "Permite eliminar el registro de un usuario registrado por su número de identificación"
+    )
     public Response deleteUserData(
             @Parameter(
                     name = "documentNumber",

@@ -59,7 +59,7 @@ public class UserService {
             LOG.errorf("@getRegisteredUserMongo SERV > No se encontro informacion del registro de usuario con " +
                     "tipo de documento: %s y numero de documento: %s en base de datos", documentType, documentNumber);
 
-            return new MTException(Response.Status.BAD_REQUEST, "Error en los recursos suministrados");
+            return new MTException(Response.Status.NOT_FOUND, "No se encontró el recurso suministrado");
         });
 
         if (!BCrypt.checkpw(userData.getData().getPassword(), userMongo.getData().getPassword())) {
@@ -69,6 +69,7 @@ public class UserService {
 
             throw new MTException(Response.Status.BAD_REQUEST, "Error en los recursos suministrados");
         }
+        userMongo.setData(getUserDto(userMongo));
 
         LOG.infof("@getRegisteredUserMongo SERV > Finaliza ejecucion de servicio para obtener registro del " +
                 "usuario con id: %s en mongo. Usuario obtenido: %s", documentNumber, userMongo);
@@ -114,7 +115,7 @@ public class UserService {
             LOG.errorf("@editUserDataInMongo SERV > El usuario con identificador: %s NO se encuentra " +
                     "registrado en mongo. La solicitud es invalida no se puede editar registro", documentNumber);
 
-            return new MTException(Response.Status.BAD_REQUEST, "Error en los recursos suministrados");
+            return new MTException(Response.Status.NOT_FOUND, "No se encontró el recurso suministrado");
         });
 
         LOG.infof("@editUserDataInMongo SERV > El usuario con id: %s si esta registrado, se procede a " +
@@ -163,21 +164,23 @@ public class UserService {
         LOG.info("@getUserData SERV > Inicia servicio que consulta y transforma la informacion de cada usuario en " +
                 "un DTO para asi retornar solo los datos necesarios");
 
-        return userDataRepository.getRegisteredUsersMongo().stream().peek(userData -> {
+        return userDataRepository.getRegisteredUsersMongo().stream()
+                .peek(userData -> userData.setData(getUserDto(userData))).toList();
+    }
 
-            UserDTO userDTO = new UserDTO();
+    private UserDTO getUserDto(UserData userData) {
 
-            userDTO.setName(userData.getData().getName());
-            userDTO.setLastName(userData.getData().getLastName());
-            userDTO.setRole(userData.getData().getRole());
-            userDTO.setEmail(userData.getData().getEmail());
-            userDTO.setActive(userData.getData().getActive());
-            userDTO.setDocumentType(userData.getData().getDocumentType());
-            userDTO.setDocumentNumber(userData.getData().getDocumentNumber());
+        UserDTO userDTO = new UserDTO();
 
-            userData.setData(userDTO);
+        userDTO.setName(userData.getData().getName());
+        userDTO.setLastName(userData.getData().getLastName());
+        userDTO.setRole(userData.getData().getRole());
+        userDTO.setEmail(userData.getData().getEmail());
+        userDTO.setActive(userData.getData().getActive());
+        userDTO.setDocumentType(userData.getData().getDocumentType());
+        userDTO.setDocumentNumber(userData.getData().getDocumentNumber());
 
-        }).toList();
+        return userDTO;
     }
 
     private void updateUserDataInformation(UserData userDataMongo, User editedUser, String idUser) {
