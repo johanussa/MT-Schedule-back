@@ -17,13 +17,9 @@ public class ProblemException {
     @Schema(example = "Solicitud inválida")
     private String title;
 
-    @Schema(example = "Error en la solicitud http://localhost:8080/internal/API_PATH")
+    @Schema(example = "Error en los recursos suministrados")
     private String detail;
 
     @Schema(example = "http://localhost:8080/internal/API_PATH")
     private String uri;
-
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    @Schema(example = "[\"El campo name (Nombre), no puede ser nulo o vacio\"]")
-    private List<String> errors;
 }

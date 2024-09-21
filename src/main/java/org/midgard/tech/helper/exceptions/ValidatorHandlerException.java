@@ -9,6 +9,8 @@ import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.ext.ExceptionMapper;
 import jakarta.ws.rs.ext.Provider;
 
+import java.util.stream.Collectors;
+
 @Provider
 public class ValidatorHandlerException implements ExceptionMapper<ConstraintViolationException> {
 
@@ -21,9 +23,10 @@ public class ValidatorHandlerException implements ExceptionMapper<ConstraintViol
         ProblemException problemException = ProblemException.builder()
                 .host(httpServerRequestProvider.get().getHeader("Host"))
                 .title("Solicitud inválida")
-                .detail("Error en datos suministrados")
+                .detail(exception.getConstraintViolations().stream()
+                        .map(ConstraintViolation::getMessage)
+                        .collect(Collectors.joining(";")))
                 .uri(httpServerRequestProvider.get().absoluteURI())
-                .errors(exception.getConstraintViolations().stream().map(ConstraintViolation::getMessage).toList())
                 .build();
 
         return Response.status(Response.Status.BAD_REQUEST)
