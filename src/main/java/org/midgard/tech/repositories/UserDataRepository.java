@@ -4,17 +4,17 @@ import io.quarkus.mongodb.panache.PanacheMongoRepository;
 import io.quarkus.panache.common.Sort;
 import jakarta.enterprise.context.ApplicationScoped;
 import org.jboss.logging.Logger;
-import org.midgard.tech.domains.user.UserData;
+import org.midgard.tech.domains.user.UserMsg;
 
 import java.util.List;
 import java.util.Optional;
 
 @ApplicationScoped
-public class UserDataRepository implements PanacheMongoRepository<UserData> {
+public class UserDataRepository implements PanacheMongoRepository<UserMsg> {
 
     private final Logger LOG = Logger.getLogger(UserDataRepository.class);
 
-    public Optional<UserData> getOneUserData(String documentNumber, String documentType) {
+    public Optional<UserMsg> getOneUserData(String documentNumber, String documentType) {
 
         LOG.infof("@getOneUserData REPO > Inicia consulta a mongo del registro de usuario con tipo de " +
                 "documento: %s y numero de documento: %s", documentType, documentNumber);
@@ -23,7 +23,7 @@ public class UserDataRepository implements PanacheMongoRepository<UserData> {
                 .firstResultOptional();
     }
 
-    public List<UserData> getRegisteredUsersMongo() {
+    public List<UserMsg> getRegisteredUsersMongo() {
 
         LOG.info("@getRegisteredUsersMongo REPO > Inicia obtencion de los usuarios registrados en mongo. estos se " +
                 "retornaran ordenados de manera descendente por fecha de creacion");
@@ -31,7 +31,7 @@ public class UserDataRepository implements PanacheMongoRepository<UserData> {
         return listAll(Sort.descending("meta.fechaCreacion"));
     }
 
-    public Optional<UserData> findUserDataByIdUser(String documentNumber) {
+    public Optional<UserMsg> findUserDataByIdUser(String documentNumber) {
 
         LOG.infof("@findUserDataByIdUser REPO > Inicia busqueda del registro del usuario con numero de " +
                 "documento: %s en mongo", documentNumber);

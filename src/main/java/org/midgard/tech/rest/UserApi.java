@@ -19,7 +19,7 @@ import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 import org.jboss.logging.Logger;
-import org.midgard.tech.domains.user.UserData;
+import org.midgard.tech.domains.user.UserMsg;
 import org.midgard.tech.helper.exceptions.HandlerException;
 import org.midgard.tech.helper.exceptions.MTException;
 import org.midgard.tech.helper.exceptions.ProblemException;
@@ -46,7 +46,7 @@ public class UserApi {
                     @APIResponse(
                             responseCode = "200",
                             description = "Se retorna la información del usuario correctamente",
-                            content = @Content(schema = @Schema(implementation = UserData.class))
+                            content = @Content(schema = @Schema(implementation = UserMsg.class))
                     ),
                     @APIResponse(
                             responseCode = "400",
@@ -71,31 +71,30 @@ public class UserApi {
     )
     public Response getUserData(
             @RequestBody(
-                    name = "userData",
+                    name = "userMsg",
                     description = "Información del usuario que se va a consultar",
                     required = true,
-                    content = @Content(
-                            schema = @Schema(example = """
-                                    {
-                                        "data": {
-                                            "documentNumber": "10345678190",
-                                            "documentType": "CEDULA_DE_CIUDADANIA",
-                                            "password": "password"
-                                        }
-                                    }""")
+                    content = @Content(example = """
+                            {
+                                "data": {
+                                    "documentNumber": "10345678190",
+                                    "documentType": "CEDULA_DE_CIUDADANIA",
+                                    "password": "password"
+                                }
+                            }"""
                     )
             )
             @NotNull(message = "Debe ingresar el objeto con la información del usuario a registrar")
-            @Valid @ConvertGroup(to = ValidationGroups.Post_Get.class) UserData userData
+            @Valid @ConvertGroup(to = ValidationGroups.Post_Get.class) UserMsg userMsg
     ) throws MTException {
 
         LOG.infof("@getUserData API > Inicia ejecucion del servicio para obtener el registro del usuario con " +
-                "numero de documento: %s en base de datos", userData.getData().getDocumentNumber());
+                "numero de documento: %s en base de datos", userMsg.getData().getDocumentNumber());
 
-        UserData userMongo = userService.getRegisteredUserMongo(userData);
+        UserMsg userMongo = userService.getRegisteredUserMongo(userMsg);
 
         LOG.infof("@getUserData API > Finaliza ejecucion del servicio para obtener el registro del usuario con " +
-                "numero de documento: %s. El usuario se obtuvo correctamente", userData.getData().getDocumentNumber());
+                "numero de documento: %s. El usuario se obtuvo correctamente", userMsg.getData().getDocumentNumber());
 
         return Response.ok().entity(userMongo).build();
     }
@@ -108,7 +107,7 @@ public class UserApi {
                     @APIResponse(
                             responseCode = "200",
                             description = "Se obtuvo la información de todos los usuarios registrados",
-                            content = @Content(schema = @Schema(type = SchemaType.ARRAY, implementation = UserData.class))
+                            content = @Content(schema = @Schema(type = SchemaType.ARRAY, implementation = UserMsg.class))
                     ),
                     @APIResponse(
                             responseCode = "500",
@@ -126,7 +125,7 @@ public class UserApi {
         LOG.info("@getListUsers API > Inicia ejecucion del servicio para obtener el listado de todos los usuarios " +
                 "registrados en mongo");
 
-        List<UserData> users = userService.getListRegisteredUser();
+        List<UserMsg> users = userService.getListRegisteredUser();
 
         LOG.infof("@getListUsers API > Finaliza ejecucion del servicio para obtener el listado de todos los " +
                 "usuarios registrados en mongo. Se encontraron: %s registros", users.size());
@@ -161,10 +160,10 @@ public class UserApi {
     )
     public Response createUserData(
             @RequestBody(
-                    name = "userData",
+                    name = "userMsg",
                     description = "Objeto con la información del usuario que se va a crear",
                     required = true,
-                    content = @Content(schema = @Schema(example = """
+                    content = @Content(example = """
                             {
                                 "data": {
                                     "name": "John Alexander",
@@ -175,18 +174,18 @@ public class UserApi {
                                     "password": "password",
                                     "role": "INSTRUCTOR"
                                 }
-                            }""")
+                            }"""
                     )
             )
             @NotNull(message = "Debe ingresar el objeto data con la información del usuario a registrar")
-            @Valid @ConvertGroup(to = ValidationGroups.Post.class) UserData userData
+            @Valid @ConvertGroup(to = ValidationGroups.Post.class) UserMsg userMsg
     ) throws UnknownHostException, MTException {
 
-        LOG.infof("@createUserData API > Inicia api de creacion de usuario con la data: %s", userData.getData());
+        LOG.infof("@createUserData API > Inicia api de creacion de usuario con la data: %s", userMsg.getData());
 
-        userService.saveUserDataInMongo(userData);
+        userService.saveUserDataInMongo(userMsg);
 
-        LOG.infof("@createUserData API > Finaliza api de creacion de usuario con la data: %s", userData);
+        LOG.infof("@createUserData API > Finaliza api de creacion de usuario con la data: %s", userMsg);
 
         return Response.ok()
                 .status(Response.Status.CREATED)
@@ -225,10 +224,10 @@ public class UserApi {
     )
     public Response editUserInfo(
             @RequestBody(
-                    name = "userData",
+                    name = "userMsg",
                     description = "Información con la que se actualizara el usuario",
                     required = true,
-                    content = @Content(schema = @Schema(example = """
+                    content = @Content(example = """
                             {
                                 "data": {
                                     "name": "Otro nombre",
@@ -238,18 +237,18 @@ public class UserApi {
                                     "password": "password",
                                     "active": "false"
                                 }
-                            }"""))
+                            }""")
             )
-            @Valid @ConvertGroup(to = ValidationGroups.Put.class) UserData userData
+            @Valid @ConvertGroup(to = ValidationGroups.Put.class) UserMsg userMsg
     ) throws MTException {
 
         LOG.infof("@editUserInfo API > Inicia ejecucion de servicio de edicion de usuario con identificador" +
-                ": %s. Se actualiza con la data: %s", userData.getData().getDocumentNumber(), userData.getData());
+                ": %s. Se actualiza con la data: %s", userMsg.getData().getDocumentNumber(), userMsg.getData());
 
-        userService.editUserDataInMongo(userData);
+        userService.editUserDataInMongo(userMsg);
 
         LOG.infof("@editUserInfo API > Finaliza ejecucion de servicio de edicion de usuario con identificador" +
-                ": %s. El registro se actualizo con la data: %s", userData.getData().getDocumentNumber(), userData);
+                ": %s. El registro se actualizo con la data: %s", userMsg.getData().getDocumentNumber(), userMsg);
 
         return Response.ok()
                 .status(Response.Status.NO_CONTENT)

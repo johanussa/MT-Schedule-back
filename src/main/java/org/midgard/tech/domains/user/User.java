@@ -33,7 +33,7 @@ public class User implements Serializable {
     @Size(min = 3, max = 40, message = "El campo lastName debe contener entre 3 y 40 caracteres")
     @Pattern(regexp = "^[a-zA-Z]+( [a-zA-Z]+)*$", message = "El apellido no debe contener valores numéricos ni " +
             "caracteres especiales ni espacios vacíos al inicio o al final")
-    @Null(message = "No debe ingresar el apellido para obtener data de un usuario", groups = ValidationGroups.Post_Get.class)
+    @Null(message = "No debe ingresar el apellido para obtener data del usuario", groups = ValidationGroups.Post_Get.class)
     private String lastName;
 
     @Schema(example = "1023456789")

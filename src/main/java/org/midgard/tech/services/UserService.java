@@ -9,7 +9,7 @@ import org.jboss.logging.Logger;
 import org.midgard.tech.domains.Meta;
 import org.midgard.tech.domains.user.User;
 import org.midgard.tech.domains.user.UserDTO;
-import org.midgard.tech.domains.user.UserData;
+import org.midgard.tech.domains.user.UserMsg;
 import org.midgard.tech.helper.exceptions.MTException;
 import org.midgard.tech.repositories.UserDataRepository;
 import org.mindrot.jbcrypt.BCrypt;
@@ -32,12 +32,12 @@ public class UserService {
     @Inject
     Provider<HttpServerRequest> httpServerRequestProvider;
 
-    public List<UserData> getListRegisteredUser() {
+    public List<UserMsg> getListRegisteredUser() {
 
         LOG.debug("@getListRegisteredUser SERV > Inicia ejecucion del servicio para obtener el listado de los " +
                 "usuarios registrados en mongo");
 
-        List<UserData> users = getUserData();
+        List<UserMsg> users = getUserData();
 
         LOG.infof("@getListRegisteredUser SERV > Finaliza obtencion de registros de usuarios y se retorna " +
                 "un total de %s registros de mongo. Finaliza ejecucion del servicio para obtener el listado de los" +
@@ -46,15 +46,15 @@ public class UserService {
         return users;
     }
 
-    public UserData getRegisteredUserMongo(UserData userData) throws MTException {
+    public UserMsg getRegisteredUserMongo(UserMsg userMsg) throws MTException {
 
         LOG.infof("@getRegisteredUserMongo SERV > Inicia ejecucion de servicio para obtener registro del " +
-                "usuario con id: %s en mongo", userData.getData().getDocumentNumber());
+                "usuario con id: %s en mongo", userMsg.getData().getDocumentNumber());
 
-        String documentType = userData.getData().getDocumentType();
-        String documentNumber = userData.getData().getDocumentNumber();
+        String documentType = userMsg.getData().getDocumentType();
+        String documentNumber = userMsg.getData().getDocumentNumber();
 
-        UserData userMongo = userDataRepository.getOneUserData(documentNumber, documentType).orElseThrow(() -> {
+        UserMsg userMongo = userDataRepository.getOneUserData(documentNumber, documentType).orElseThrow(() -> {
 
             LOG.errorf("@getRegisteredUserMongo SERV > No se encontro informacion del registro de usuario con " +
                     "tipo de documento: %s y numero de documento: %s en base de datos", documentType, documentNumber);
@@ -62,7 +62,7 @@ public class UserService {
             return new MTException(Response.Status.NOT_FOUND, "No se encontró el recurso suministrado");
         });
 
-        if (!BCrypt.checkpw(userData.getData().getPassword(), userMongo.getData().getPassword())) {
+        if (!BCrypt.checkpw(userMsg.getData().getPassword(), userMongo.getData().getPassword())) {
 
             LOG.errorf("@getRegisteredUserMongo SERV > El password ingresado no es valido para el cliente " +
                     "con tipo de documento: %s y numero de documento: %s", documentType, documentNumber);
@@ -77,40 +77,40 @@ public class UserService {
         return userMongo;
     }
 
-    public void saveUserDataInMongo(UserData userData) throws UnknownHostException, MTException {
+    public void saveUserDataInMongo(UserMsg userMsg) throws UnknownHostException, MTException {
 
         LOG.infof("@saveUserDataInMongo SERV > Inicia servicio de guardado de usuario en mongo con la data: " +
-                "%s. Inicia verificacion de si el usuario ya esta registrado en mongo", userData.getData());
+                "%s. Inicia verificacion de si el usuario ya esta registrado en mongo", userMsg.getData());
 
-        validateIfUserIsRegistered(userData.getData().getDocumentNumber());
+        validateIfUserIsRegistered(userMsg.getData().getDocumentNumber());
 
         LOG.infof("@saveUserDataInMongo SERV > Finaliza validacion del usuario si ya ha sido registrado " +
                 "previamente. Inicia servicio de verificacion de password del usuario con data: %s si ya ha " +
-                "sido encriptada", userData.getData());
+                "sido encriptada", userMsg.getData());
 
-        validPasswordEncrypted(userData.getData());
+        validPasswordEncrypted(userMsg.getData());
 
         LOG.infof("@saveUserDataInMongo SERV > Finaliza verificacion de password del usuario con data: " +
-                "%s. Inicia edicion al nombre de usuario, el estado y la metadata", userData.getData());
+                "%s. Inicia edicion al nombre de usuario, el estado y la metadata", userMsg.getData());
 
-        editUserDataToCreateUser(userData);
+        editUserDataToCreateUser(userMsg);
 
         LOG.infof("@saveUserDataInMongo SERV > Finaliza estructura del objeto meta correctamente. Inicia " +
-                "almacenamiento del registro en mongo con la data: %s", userData);
+                "almacenamiento del registro en mongo con la data: %s", userMsg);
 
-        userDataRepository.persist(userData);
+        userDataRepository.persist(userMsg);
 
-        LOG.infof("@saveUserDataInMongo SERV > Finaliza servicio de creacion de usuario con data: %s", userData);
+        LOG.infof("@saveUserDataInMongo SERV > Finaliza servicio de creacion de usuario con data: %s", userMsg);
     }
 
-    public void editUserDataInMongo(UserData userData) throws MTException {
+    public void editUserDataInMongo(UserMsg userMsg) throws MTException {
 
         LOG.infof("@editUserDataInMongo SERV > Inicia ejecucion de servicio de edicion de registro de usuario " +
-                "con id: %s con la data: %s", userData.getData().getDocumentNumber(), userData.getData());
+                "con id: %s con la data: %s", userMsg.getData().getDocumentNumber(), userMsg.getData());
 
-        String documentNumber = userData.getData().getDocumentNumber();
+        String documentNumber = userMsg.getData().getDocumentNumber();
 
-        UserData userDataMongo = userDataRepository.findUserDataByIdUser(documentNumber).orElseThrow(() -> {
+        UserMsg userMsgMongo = userDataRepository.findUserDataByIdUser(documentNumber).orElseThrow(() -> {
 
             LOG.errorf("@editUserDataInMongo SERV > El usuario con identificador: %s NO se encuentra " +
                     "registrado en mongo. La solicitud es invalida no se puede editar registro", documentNumber);
@@ -121,23 +121,23 @@ public class UserService {
         LOG.infof("@editUserDataInMongo SERV > El usuario con id: %s si esta registrado, se procede a " +
                 "realizar actualizacion de los  en mongo. Inicia verificacion de password", documentNumber);
 
-        validPasswordEncrypted(userData.getData());
+        validPasswordEncrypted(userMsg.getData());
 
         LOG.infof("@editUserDataInMongo SERV > Finaliza verificacion de password del usuario con data: %s. " +
-                "Inicia edicion de la informacion del usuario con id: %s", userData.getData(), documentNumber);
+                "Inicia edicion de la informacion del usuario con id: %s", userMsg.getData(), documentNumber);
 
-        updateUserDataInformation(userDataMongo, userData.getData(), documentNumber);
+        updateUserDataInformation(userMsgMongo, userMsg.getData(), documentNumber);
 
         LOG.infof("@editUserDataInMongo SERV > Finaliza edicion de usuario con id: %s. Inicia actualizacion " +
-                "en mongo con la data: %s", documentNumber, userDataMongo);
+                "en mongo con la data: %s", documentNumber, userMsgMongo);
 
-        userDataRepository.update(userDataMongo);
+        userDataRepository.update(userMsgMongo);
 
         LOG.infof("@editUserDataInMongo SERV > Finaliza actualizacion de registro de usuario con id: %s en " +
-                "mongo. Se actualizo el registro con la data: %s", documentNumber, userDataMongo);
+                "mongo. Se actualizo el registro con la data: %s", documentNumber, userMsgMongo);
 
         LOG.infof("@editUserData SERV > Finaliza ejecucion de servicio de edicion de registro de usuario " +
-                "con id: %s con la data: %s", userData.getData().getDocumentNumber(), userData.getData());
+                "con id: %s con la data: %s", userMsg.getData().getDocumentNumber(), userMsg.getData());
     }
 
     public void deleteUserDataInMongo(String documentNumber) throws MTException {
@@ -159,35 +159,35 @@ public class UserService {
                 "%s registro de la base de datos", documentNumber, update);
     }
 
-    private List<UserData> getUserData() {
+    private List<UserMsg> getUserData() {
 
         LOG.info("@getUserData SERV > Inicia servicio que consulta y transforma la informacion de cada usuario en " +
                 "un DTO para asi retornar solo los datos necesarios");
 
         return userDataRepository.getRegisteredUsersMongo().stream()
-                .peek(userData -> userData.setData(getUserDto(userData))).toList();
+                .peek(userMsg -> userMsg.setData(getUserDto(userMsg))).toList();
     }
 
-    private UserDTO getUserDto(UserData userData) {
+    private UserDTO getUserDto(UserMsg userMsg) {
 
         UserDTO userDTO = new UserDTO();
 
-        userDTO.setName(userData.getData().getName());
-        userDTO.setLastName(userData.getData().getLastName());
-        userDTO.setRole(userData.getData().getRole());
-        userDTO.setEmail(userData.getData().getEmail());
-        userDTO.setActive(userData.getData().getActive());
-        userDTO.setDocumentType(userData.getData().getDocumentType());
-        userDTO.setDocumentNumber(userData.getData().getDocumentNumber());
+        userDTO.setName(userMsg.getData().getName());
+        userDTO.setLastName(userMsg.getData().getLastName());
+        userDTO.setRole(userMsg.getData().getRole());
+        userDTO.setEmail(userMsg.getData().getEmail());
+        userDTO.setActive(userMsg.getData().getActive());
+        userDTO.setDocumentType(userMsg.getData().getDocumentType());
+        userDTO.setDocumentNumber(userMsg.getData().getDocumentNumber());
 
         return userDTO;
     }
 
-    private void updateUserDataInformation(UserData userDataMongo, User editedUser, String idUser) {
+    private void updateUserDataInformation(UserMsg userMsgMongo, User editedUser, String idUser) {
 
         LOG.infof("@updateUserDataInformation SERV > Inicia actualizacion de datos de usuario con id: %s", idUser);
 
-        User userMongo = userDataMongo.getData();
+        User userMongo = userMsgMongo.getData();
 
         userMongo.setActive(editedUser.getActive());
         userMongo.setPassword(editedUser.getPassword());
@@ -195,29 +195,29 @@ public class UserService {
         userMongo.setName(capitalizeWords(editedUser.getName()));
         userMongo.setLastName(capitalizeWords(editedUser.getLastName()));
 
-        userDataMongo.getMeta().setLastUpdate(LocalDateTime.now());
+        userMsgMongo.getMeta().setLastUpdate(LocalDateTime.now());
 
         LOG.infof("@updateUserDataInformation SERV > Finaliza actualizacion de datos de usuario con id: %s", idUser);
     }
 
-    private void editUserDataToCreateUser(UserData userData) throws UnknownHostException {
+    private void editUserDataToCreateUser(UserMsg userMsg) throws UnknownHostException {
 
         LOG.infof("@editUserDataToCreateUser SERV > Inicia edicion de datos del usuario para ser almacenados " +
-                "en mongo. Los datos que se almacenaran son: %s", userData.getData());
+                "en mongo. Los datos que se almacenaran son: %s", userMsg.getData());
 
-        User user = userData.getData();
+        User user = userMsg.getData();
 
         user.setActive(false);
         user.setName(capitalizeWords(user.getName()));
         user.setLastName(capitalizeWords(user.getLastName()));
 
         LOG.infof("@editUserDataToCreateUser SERV > Finaliza formato al nombre del usuario con data: %s. " +
-                "Inicia estructura del objeto meta con la informacion de auditoria", userData.getData());
+                "Inicia estructura del objeto meta con la informacion de auditoria", userMsg.getData());
 
-        userData.setMeta(getMetaToCreateUser());
+        userMsg.setMeta(getMetaToCreateUser());
 
         LOG.infof("@editUserDataToCreateUser SERV > Finaliza estructura del objeto meta correctamente. " +
-                "Finaliza edicion de datos del usuario", userData);
+                "Finaliza edicion de datos del usuario", userMsg);
     }
 
     private void validateIfUserIsRegistered(String idUser) throws MTException {

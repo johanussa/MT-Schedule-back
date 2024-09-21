@@ -9,6 +9,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.bson.types.ObjectId;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.midgard.tech.domains.Meta;
 import org.midgard.tech.helper.validators.ValidationGroups;
 
@@ -17,10 +18,10 @@ import java.io.Serializable;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@MongoEntity(collection = "SENA_USERS")
-public class UserData implements Serializable {
+@MongoEntity(collection = "UsuarioMsg")
+public class UserMsg implements Serializable {
 
-    @JsonIgnore
+    @Schema(hidden = true)
     @Null(message = "No debe ingresar el campo id", groups = { ValidationGroups.Post.class,
             ValidationGroups.Put.class, ValidationGroups.Post_Get.class })
     private ObjectId id;

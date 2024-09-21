@@ -14,7 +14,7 @@ public class UserValidator implements ConstraintValidator<ValidUserInterface, Us
     @Override
     public boolean isValid(User value, ConstraintValidatorContext context) {
 
-        Log.infof("@isValid > Inicia validacion del usuario con la data: %s", value);
+        Log.debugf("@isValid > Inicia validacion del usuario con la data: %s", value);
 
         if (Arrays.stream(UserDocumentTypeEnum.values())
                 .noneMatch(documentType -> documentType.getValue().equals(value.getDocumentType()))) {
@@ -23,9 +23,7 @@ public class UserValidator implements ConstraintValidator<ValidUserInterface, Us
 
             Log.errorf("@isValid > %s", message);
 
-            createConstraintViolation(context, message);
-
-            return false;
+            return createConstraintViolation(context, message);
         }
 
         if (value.getRole() != null && Arrays.stream(UserRoleEnum.values())
@@ -35,19 +33,19 @@ public class UserValidator implements ConstraintValidator<ValidUserInterface, Us
 
             Log.errorf("@isValid > %s", message);
 
-            createConstraintViolation(context, message);
-
-            return false;
+            return createConstraintViolation(context, message);
         }
 
-        Log.infof("@isValid > Finaliza validacion del usuario con la data: %s. Los datos son correctos", value);
+        Log.debugf("@isValid > Finaliza validacion del usuario con la data: %s. Los datos son correctos", value);
 
         return true;
     }
 
-    private void createConstraintViolation(ConstraintValidatorContext context, String message) {
+    private boolean createConstraintViolation(ConstraintValidatorContext context, String message) {
 
         context.disableDefaultConstraintViolation();
         context.buildConstraintViolationWithTemplate(message).addConstraintViolation();
+
+        return false;
     }
 }
